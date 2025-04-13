@@ -10,42 +10,47 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
 
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y \
-            python3-pip \
-            zip unzip \
-            openjdk-17-jdk \
-            libffi-dev \
-            libssl-dev \
-            build-essential \
-            libsqlite3-dev \
-            git \
-            curl
-          pip install --upgrade pip
-          pip install buildozer cython
-      - name: Set up Buildozer
-        run: |
-          buildozer init || true
-      - name: Copy buildozer.spec (if not already)
-        run: |
-          if [ ! -f buildozer.spec ]; then
-            cp .github/buildozer.spec buildozer.spec
-          fi
-      - name: Build APK
-        run: |
-          buildozer android debug
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: xd.apk
-          path: bin/*.apk
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y libffi-dev libssl-dev python3-pip \
+          build-essential git zip unzip openjdk-17-jdk \
+          libsqlite3-dev zlib1g-dev
+
+        pip install --upgrade pip
+        pip install cython buildozer
+
+    - name: Set environment variables
+      run: |
+        echo "export PATH=$HOME/.buildozer/android/platform/android-sdk/platform-tools:$PATH" >> $GITHUB_ENV
+        echo "export PATH=$HOME/.buildozer/android/platform/android-sdk/build-tools/34.0.0:$PATH" >> $GITHUB_ENV
+        echo "export PATH=$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
+
+    - name: Install Android SDK and Build Tools
+      run: |
+        mkdir -p $HOME/.buildozer/android/platform
+        cd $HOME/.buildozer/android/platform
+        wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
+        unzip -qq cmdline-tools.zip
+        mkdir -p android-sdk/cmdline-tools/latest
+        mv cmdline-tools/* android-sdk/cmdline-tools/latest/
+        yes | android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=android-sdk \
+          "platform-tools" "platforms;android-34" "build-tools;34.0.0" "ndk;25.2.9519653"
+
+    - name: Build with Buildozer
+      run: |
+        buildozer android debug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-release
+        path: bin/*.apk
