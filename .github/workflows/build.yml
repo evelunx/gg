@@ -1,59 +1,67 @@
-name: Build Efficient APK
+name: Build APK
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-    - name: Install Essential System Dependencies
-      run: |
-        sudo apt-get update -q
-        sudo apt-get install -y --no-install-recommends \
-          git zip unzip openjdk-17-jdk \
-          build-essential python3-dev libffi-dev libssl-dev zlib1g-dev
-        # Добавляем ~/.local/bin в PATH для установленных через pip пакетов
-        echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            python3-pip \
+            zip unzip \
+            openjdk-17-jdk \
+            libffi-dev \
+            libssl-dev \
+            build-essential \
+            libsqlite3-dev \
+            git \
+            curl \
+            aidl
+          pip install --upgrade pip
+          pip install buildozer cython
 
-    - name: Install Buildozer
-      run: python3 -m pip install --upgrade --user buildozer
+      - name: Set up Android environment
+        run: |
+          export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
+          export PATH=$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$PATH
 
-    # Используем готовый action для настройки Android SDK (cmdline-tools)
-    - name: Set up Android SDK
-      uses: android-actions/setup-android@v3
+      - name: Install required Android SDK components
+        run: |
+          sdkmanager "build-tools;34.0.0"
+          sdkmanager --install "platforms;android-34"
+          sdkmanager --install "system-images;android-34;default;x86"
 
-    # Buildozer скачает нужные SDK/NDK, но лицензии нужно принять заранее
-    - name: Accept Android SDK licenses
-      run: yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses || true
+      - name: Set up Buildozer
+        run: |
+          buildozer init || true
 
-    # Кэширование директории Buildozer значительно ускоряет повторные сборки
-    - name: Cache Buildozer global directory
-      uses: actions/cache@v4
-      with:
-        path: ~/.buildozer
-        key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
-        restore-keys: |
-          ${{ runner.os }}-buildozer-
+      - name: Copy buildozer.spec (if not already)
+        run: |
+          if [ ! -f buildozer.spec ]; then
+            cp .github/buildozer.spec buildozer.spec
+          fi
 
-    - name: Build APK with Buildozer
-      run: buildozer android debug # Убрали -v для краткости лога
+      - name: Build APK
+        run: |
+          buildozer android debug
 
-    - name: Upload APK Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: app-debug-apk
-        path: bin/*.apk
-        if-no-files-found: error # Завершить с ошибкой, если APK не найден
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: xd.apk
+          path: bin/*.apk
