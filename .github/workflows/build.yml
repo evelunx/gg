@@ -4,41 +4,37 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v3
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v3
       with:
         python-version: '3.10'
 
     - name: Install dependencies
       run: |
         sudo apt update
-        sudo apt install -y zip unzip openjdk-17-jdk wget
-        sudo apt install -y ant
-        sudo apt install -y python3-pip
-        sudo apt install -y build-essential
-        sudo apt install -y pkg-config
-        sudo apt install -y libffi-dev
-        sudo apt install -y libssl-dev
-        sudo apt install -y libsqlite3-dev
-        sudo apt install -y python3-dev
-        sudo apt install -y zlib1g-dev
-        python -m pip install --upgrade pip
-        pip install cython
-        pip install buildozer
-        pip install kivy
+        sudo apt install -y \
+          python3-pip \
+          openjdk-17-jdk \
+          unzip \
+          wget \
+          curl \
+          git
 
     - name: Install Android dependencies
       run: |
-        sudo mkdir -p $HOME/.buildozer/android/platform
+        mkdir -p $HOME/.buildozer/android/platform
         cd $HOME/.buildozer/android/platform
         wget https://dl.google.com/android/repository/android-ndk-r25b-linux.zip
         unzip android-ndk-r25b-linux.zip
@@ -50,14 +46,20 @@ jobs:
         ./tools/bin/sdkmanager --update
         ./tools/bin/sdkmanager "platforms;android-30"
         ./tools/bin/sdkmanager "build-tools;30.0.3"
-        ./tools/bin/sdkmanager "ndk;25.2.5"  # Добавляем установку Android NDK
+        ./tools/bin/sdkmanager "ndk;25.2.5"
+
+    - name: Install Buildozer
+      run: |
+        python3 -m pip install --upgrade pip
+        python3 -m pip install buildozer
 
     - name: Build APK
       run: |
+        cd $GITHUB_WORKSPACE
         buildozer android debug
 
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
+    - name: Upload APK as artifact
+      uses: actions/upload-artifact@v3
       with:
-        name: SemkaLoveMaho
-        path: bin/*.apk
+        name: my-apk
+        path: $GITHUB_WORKSPACE/bin/*.apk
