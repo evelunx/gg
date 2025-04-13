@@ -22,8 +22,6 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y zip unzip openjdk-17-jdk wget
-        sudo apt install -y android-sdk-platform-tools android-sdk-build-tools
-        sudo apt install -y android-sdk-ndk
         sudo apt install -y ant
         sudo apt install -y python3-pip
         sudo apt install -y build-essential
@@ -52,6 +50,7 @@ jobs:
         ./tools/bin/sdkmanager --update
         ./tools/bin/sdkmanager "platforms;android-30"
         ./tools/bin/sdkmanager "build-tools;30.0.3"
+        ./tools/bin/sdkmanager "ndk;25.2.5"  # Добавляем установку Android NDK
 
     - name: Build APK
       run: |
