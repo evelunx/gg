@@ -1,0 +1,56 @@
+name: Build APK
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            python3-pip \
+            zip unzip \
+            openjdk-17-jdk \
+            libffi-dev \
+            libssl-dev \
+            build-essential \
+            libsqlite3-dev \
+            git \
+            curl
+
+          pip install --upgrade pip
+          pip install buildozer cython
+
+      - name: Set up Buildozer
+        run: |
+          buildozer init || true
+
+      - name: Copy buildozer.spec (if not already)
+        run: |
+          if [ ! -f buildozer.spec ]; then
+            cp .github/buildozer.spec buildozer.spec
+          fi
+
+      - name: Build APK
+        run: |
+          buildozer android debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: xd.apk
+          path: bin/*.apk
