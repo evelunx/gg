@@ -18,14 +18,6 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Cache pip dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
       - name: Install dependencies
         run: |
           sudo apt update
@@ -41,6 +33,17 @@ jobs:
             curl
           pip install --upgrade pip
           pip install buildozer cython
+
+      - name: Set up Android SDK
+        run: |
+          mkdir -p $HOME/android-sdk
+          curl -o sdk-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+          unzip -qq sdk-tools.zip -d $HOME/android-sdk
+          rm sdk-tools.zip
+          yes | $HOME/android-sdk/cmdline-tools/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "build-tools;33.0.2" "platforms;android-33"
+        env:
+          ANDROID_HOME: $HOME/android-sdk
+          PATH: $PATH:$HOME/android-sdk/cmdline-tools/bin:$HOME/android-sdk/platform-tools:$HOME/android-sdk/build-tools/33.0.2
 
       - name: Set up Buildozer
         run: |
