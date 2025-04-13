@@ -22,9 +22,36 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y zip unzip openjdk-17-jdk wget
+        sudo apt install -y android-sdk-platform-tools android-sdk-build-tools
+        sudo apt install -y android-sdk-ndk
+        sudo apt install -y ant
+        sudo apt install -y python3-pip
+        sudo apt install -y build-essential
+        sudo apt install -y pkg-config
+        sudo apt install -y libffi-dev
+        sudo apt install -y libssl-dev
+        sudo apt install -y libsqlite3-dev
+        sudo apt install -y python3-dev
+        sudo apt install -y zlib1g-dev
         python -m pip install --upgrade pip
         pip install cython
         pip install buildozer
+        pip install kivy
+
+    - name: Install Android dependencies
+      run: |
+        sudo mkdir -p $HOME/.buildozer/android/platform
+        cd $HOME/.buildozer/android/platform
+        wget https://dl.google.com/android/repository/android-ndk-r25b-linux.zip
+        unzip android-ndk-r25b-linux.zip
+        rm android-ndk-r25b-linux.zip
+        wget https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip
+        unzip sdk-tools-linux-4333796.zip
+        rm sdk-tools-linux-4333796.zip
+        ./tools/bin/sdkmanager --licenses
+        ./tools/bin/sdkmanager --update
+        ./tools/bin/sdkmanager "platforms;android-30"
+        ./tools/bin/sdkmanager "build-tools;30.0.3"
 
     - name: Build APK
       run: |
