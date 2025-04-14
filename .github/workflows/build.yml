@@ -45,15 +45,13 @@ jobs:
           ANDROID_HOME: $HOME/android-sdk
           PATH: $PATH:$HOME/android-sdk/cmdline-tools/bin:$HOME/android-sdk/platform-tools:$HOME/android-sdk/build-tools/33.0.2
 
-      - name: Set up Buildozer
+      - name: Download and set up NDK manually
         run: |
-          buildozer init || true
-
-      - name: Copy buildozer.spec (if not already)
-        run: |
-          if [ ! -f buildozer.spec ]; then
-            cp .github/buildozer.spec buildozer.spec
-          fi
+          mkdir -p $HOME/.buildozer/android/platform
+          curl -L -o ndk.zip https://dl.google.com/android/repository/android-ndk-r25b-linux.zip
+          unzip -qq ndk.zip -d $HOME/.buildozer/android/platform/
+          mv $HOME/.buildozer/android/platform/android-ndk-r25b $HOME/.buildozer/android/platform/android-ndk-r25b
+          rm ndk.zip
 
       - name: Build APK
         run: |
@@ -62,5 +60,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: xd.apk
+          name: semkalove.apk
           path: bin/*.apk
