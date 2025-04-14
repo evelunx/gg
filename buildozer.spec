@@ -18,9 +18,10 @@ android.api = 33
 android.minapi = 21
 android.ndk = 25b
 android.sdk = 24.0.0
-android.ndk_path = 
-android.sdk_path = 
 android.private_storage = 0
-android.permissions = 
+android.permissions = INTERNET
+android.sdk_path = $HOME/android-sdk
+android.ndk_path = $HOME/.buildozer/android/platform/android-ndk-r25b
+android.build_tools_version = 33.0.2
 
 [toolchain]
