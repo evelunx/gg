@@ -10,13 +10,72 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Set up Python and Install Buildozer
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y python3-pip zip unzip openjdk-17-jdk
+          sudo apt install -y \
+            python3-pip \
+            zip unzip \
+            openjdk-17-jdk \
+            libffi-dev \
+            libssl-dev \
+            build-essential \
+            libsqlite3-dev \
+            git \
+            curl
+          pip install --upgrade pip
           pip install buildozer cython
+
+      - name: Verify buildozer installation
+        run: |
+          buildozer --version
+          which buildozer
+          buildozer android debug --help
+
+      - name: Set up Android SDK
+        run: |
+          mkdir -p $HOME/android-sdk
+          curl -o sdk-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+          unzip -qq sdk-tools.zip -d $HOME/android-sdk
+          rm sdk-tools.zip
+          yes | $HOME/android-sdk/cmdline-tools/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "build-tools;33.0.2" "platforms;android-33" "extras;android;m2repository" "extras;google;m2repository"
+
+      - name: Accept Android SDK licenses
+        run: |
+          yes | $HOME/android-sdk/cmdline-tools/bin/sdkmanager --licenses
+
+      - name: Check if AIDL is available
+        run: |
+          AIDL_PATH=$(find $HOME/android-sdk/build-tools/33.0.2 -name "aidl" -type f)
+          if [ ! -f "$AIDL_PATH" ]; then
+            echo "AIDL not found at path: $AIDL_PATH"
+            exit 1
+          fi
+          echo "AIDL found at path: $AIDL_PATH"
+
+      - name: Download and set up NDK manually
+        run: |
+          mkdir -p $HOME/.buildozer/android/platform
+          curl -L -o ndk.zip https://dl.google.com/android/repository/android-ndk-r25b-linux.zip
+          unzip -qq ndk.zip -d $HOME/.buildozer/android/platform/
+          mv $HOME/.buildozer/android/platform/android-ndk-r25b $HOME/.buildozer/android/platform/android-ndk-r25b
+          rm ndk.zip
+
+      - name: Check if buildozer.spec exists
+        run: |
+          ls -la
+          if [ ! -f buildozer.spec ]; then
+            echo "Error: buildozer.spec file not found!"
+            exit 1
+          fi
 
       - name: Build APK
         run: |
