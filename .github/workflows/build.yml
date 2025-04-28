@@ -18,13 +18,32 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install system dependencies
+      - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y python3-pip build-essential libssl-dev libffi-dev python3-dev \
-            libsqlite3-dev openjdk-17-jdk unzip git
+          sudo apt install -y \
+            python3-pip \
+            zip unzip \
+            openjdk-17-jdk \
+            libffi-dev \
+            libssl-dev \
+            build-essential \
+            libsqlite3-dev \
+            git \
+            curl
           pip install --upgrade pip
           pip install buildozer cython
+
+      - name: Set up Android SDK and NDK
+        run: |
+          mkdir -p $HOME/android-sdk
+          curl -o sdk-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+          unzip -qq sdk-tools.zip -d $HOME/android-sdk/cmdline-tools
+          rm sdk-tools.zip
+          yes | $HOME/android-sdk/cmdline-tools/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "build-tools;33.0.2" "platforms;android-33" "ndk;25.1.8937393"
+        env:
+          ANDROID_HOME: $HOME/android-sdk
+          PATH: $HOME/android-sdk/cmdline-tools/bin:$HOME/android-sdk/platform-tools:$HOME/android-sdk/build-tools/33.0.2:$PATH
 
       - name: Build APK
         run: |
