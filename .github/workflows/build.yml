@@ -46,7 +46,8 @@ jobs:
           curl -o sdk-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
           unzip -qq sdk-tools.zip -d $HOME/android-sdk
           rm sdk-tools.zip
-          yes | $HOME/android-sdk/cmdline-tools/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "build-tools;33.0.2" "platforms;android-33"
+          yes | $HOME/android-sdk/cmdline-tools/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "build-tools;33.0.2" "platforms;android-33" "extras;android;m2repository" "extras;google;m2repository"
+          yes | $HOME/android-sdk/cmdline-tools/bin/sdkmanager --sdk_root=$HOME/android-sdk "build-tools;33.0.2"
         env:
           ANDROID_HOME: $HOME/android-sdk
           PATH: $PATH:$HOME/android-sdk/cmdline-tools/bin:$HOME/android-sdk/platform-tools:$HOME/android-sdk/build-tools/33.0.2
@@ -58,6 +59,14 @@ jobs:
           unzip -qq ndk.zip -d $HOME/.buildozer/android/platform/
           mv $HOME/.buildozer/android/platform/android-ndk-r25b $HOME/.buildozer/android/platform/android-ndk-r25b
           rm ndk.zip
+
+      - name: Check if AIDL is installed
+        run: |
+          if ! command -v aidl &> /dev/null
+          then
+              echo "AIDL not found!"
+              exit 1
+          fi
 
       - name: Check if buildozer.spec exists
         run: |
