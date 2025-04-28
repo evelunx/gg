@@ -47,14 +47,15 @@ jobs:
           unzip -qq sdk-tools.zip -d $HOME/android-sdk
           rm sdk-tools.zip
           yes | $HOME/android-sdk/cmdline-tools/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "build-tools;33.0.2" "platforms;android-33" "extras;android;m2repository" "extras;google;m2repository"
-
-      - name: Accept Android SDK licenses
-        run: |
           yes | $HOME/android-sdk/cmdline-tools/bin/sdkmanager --licenses
+
+      - name: Install build-tools with AIDL
+        run: |
+          yes | $HOME/android-sdk/cmdline-tools/bin/sdkmanager "build-tools;29.0.3" "platforms;android-29"
 
       - name: Check if AIDL is available
         run: |
-          AIDL_PATH=$(find $HOME/android-sdk/build-tools/33.0.2 -name "aidl" -type f)
+          AIDL_PATH=$(find $HOME/android-sdk/build-tools/29.0.3 -name "aidl" -type f)
           if [ ! -f "$AIDL_PATH" ]; then
             echo "AIDL not found at path: $AIDL_PATH"
             exit 1
